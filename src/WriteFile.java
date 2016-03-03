@@ -12,11 +12,11 @@ public class WriteFile implements WriteResult
     private File file;
     public WriteFile(TimeSeriesValueWindow serie)  // crea la cartella con il file contenente tutti i valori delle variabili locali
     {
-        /*
+        
         String separator[]=Main.hashTimeSeriesName(serie.getName()).split("\t");
         int hash=Integer.parseInt(separator[0]);
         this.serie.setPathSubDir(Integer.parseInt(separator[1]));
-        this.serie=serie;*/
+        this.serie=serie;
         file=new File(Main.path+File.separator +Main.firstDirTimeSeriesPath(serie.getName())+File.separator+hash+File.separator+serie.getName()+File.separator+hash+"Log.txt");
         if(file.exists())
            file.delete();
