@@ -7,58 +7,122 @@ import java.util.Map;
 public class WriteFile implements WriteResult
 {
 
-    private BufferedWriter bwSerie;
+    private BufferedWriter bwLog;
+    private BufferedWriter bwResult;
+    private BufferedReader readList;
     private TimeSeriesValueWindow serie;
-    private File file;
-    public WriteFile(TimeSeriesValueWindow serie)  // crea la cartella con il file contenente tutti i valori delle variabili locali
+    private File fileLog;
+    private File fileResult;
+    private int collisionNumber;
+    private int hash;
+    private String firstDir;
+    public WriteFile(TimeSeriesValueWindow serie) throws IOException  // crea la cartella con il file contenente tutti i valori delle variabili locali
     {
-        
-        String separator[]=Main.hashTimeSeriesName(serie.getName()).split("\t");
-        int hash=Integer.parseInt(separator[0]);
-        this.serie.setPathSubDir(Integer.parseInt(separator[1]));
+
+        hash=Main.hashTimeSeriesName(serie.getName());
+        collisionNumber=0;  // collision number, i'll set only if i discover list file
         this.serie=serie;
-        file=new File(Main.path+File.separator +Main.firstDirTimeSeriesPath(serie.getName())+File.separator+hash+File.separator+serie.getName()+File.separator+hash+"Log.txt");
-        if(file.exists())
-           file.delete();
+        firstDir= Main.firstDirTimeSeriesPath(serie.getName());
+        boolean foundCollision=false;
+        /*
+        * Now i'm going to check in hash dir the list of collision to detect weather collision occurs
+        * */
+        File listFile=new File(Main.path+File.separator+firstDir+File.separator+hash+File.separator+"CollisionList.txt");
+        BufferedWriter listWriter;
+        if(listFile.exists())   // if list file doesn't exist i'm going to create it
+        {
+            try
+            {
+                readList=new BufferedReader(new FileReader(listFile));
+            } catch (FileNotFoundException e)
+            {
+                System.out.println(e.getMessage());
+                System.exit(1);
+            }
+            String line;
+            while((line=readList.readLine())!=null)
+            {
+                String token[]=line.split("\t");
+                collisionNumber=Integer.parseInt(token[1]);
+                if(token[0].equals(serie.getName()))
+                {
+                    foundCollision=true;
+                    break;
+                }
+
+            }
+        }
+        // else i've to create listFile
         else
         {
-            file.getParentFile().mkdirs();
+            listFile.getParentFile().mkdirs();
+            listFile.createNewFile();
         }
-        try
+        if(foundCollision==false)
         {
-            file.createNewFile();
+            collisionNumber++;
+            listWriter = new BufferedWriter(new FileWriter(listFile, true));
+            listWriter.append(serie.getName() + "\t" + collisionNumber);
+        }
 
-        }
-        catch (IOException e)
+        // here i can create subdirectory and put my time series file
+        // the same path of listFile+collisionNumber
+        fileLog=new File(Main.path+File.separator +firstDir+File.separator+hash+File.separator+collisionNumber+File.separator+hash+"Log.txt");
+        if(fileLog.exists())
         {
-            System.out.println(e.getMessage());
-            System.exit(1);
+            this.loadFromFile(fileLog,serie.getName(),serie);
+            fileLog.delete();
         }
+        else
+            fileLog.mkdirs();
+
+        fileLog.createNewFile();
+        // now i set result file
+        fileResult = new File(Main.path + File.separator + firstDir + File.separator + hash + File.separator + collisionNumber + File.separator + "Result.txt");
+        if (!fileResult.exists())
+        {
+            fileResult.createNewFile();
+        }
+        this.connect();
+
+
 
     }
-    public WriteFile()
+    public void writeWindowResult(TimeSeriesValueWindow trendToWrite,double lastTime, double lastRelevance)throws IOException
     {
+        String graphics = "------------";
+        bwResult.append(graphics + "Computo Trend Della TimeSeries " + trendToWrite.getName() + " Finestra numero " + trendToWrite.getWindowNumber() + graphics);
+        bwResult.newLine();
+        for (Map.Entry<Double, Double> entry : trendToWrite.getWindowList().entrySet())
+        {
+            bwResult.append("Time : " + entry.getKey() + " Relevance " + entry.getValue());
+            bwResult.newLine();
+        }
+        bwResult.append("Time : " + lastTime + " Relevance " + lastRelevance);
+        bwResult.newLine();
+        bwResult.append("Media pesata " + (trendToWrite.getSumOfDecay() / trendToWrite.getSumOfWeight()) + " sum of decay " + trendToWrite.getSumOfDecay() + " sum of weight : " + trendToWrite.getSumOfWeight());
+        bwResult.newLine();
+        bwResult.append(graphics + " Fine Finestra TimeSeries " + trendToWrite.getName() + graphics);
+        bwResult.newLine();
 
     }
-    public void write() throws IOException {
+    public void writeLog() throws IOException {
         // scrivi tutti i campi
         System.out.println("Time series nel metodo write "+serie.getName());
-        bwSerie.write("name:\t"+serie.getName()+"\n");
-        bwSerie.write("sum of decay:\t"+serie.getSumOfDecay()+"\n");
-        bwSerie.write("sum of weight:\t"+serie.getSumOfWeight()+"\n");
-        bwSerie.write("current relevance:\t"+serie.getCurrRelevance()+"\n");
-        bwSerie.write("current time:\t"+serie.getCurrTime()+"\n");
-        bwSerie.write("current trend:\t"+serie.getCurrTrend()+"\n");
-        bwSerie.write("window number:\t"+serie.getWindowNumber()+"\n");
-        bwSerie.write("window count element:\t"+serie.getWindowCountElement()+"\n");
-        bwSerie.write("path sub dir:\t"+serie.getPathSubDir());
-        bwSerie.write("-Window List-\n");
+        bwLog.write("name:\t"+serie.getName()+"\n");
+        bwLog.write("sum of decay:\t"+serie.getSumOfDecay()+"\n");
+        bwLog.write("sum of weight:\t"+serie.getSumOfWeight()+"\n");
+        bwLog.write("current relevance:\t"+serie.getCurrRelevance()+"\n");
+        bwLog.write("current time:\t"+serie.getCurrTime()+"\n");
+        bwLog.write("current trend:\t"+serie.getCurrTrend()+"\n");
+        bwLog.write("window number:\t"+serie.getWindowNumber()+"\n");
+        bwLog.write("window count element:\t"+serie.getWindowCountElement()+"\n");
+        bwLog.write("-Window List-\n");
         for(Map.Entry<Double,Double> entry : serie.getWindowList().entrySet())
         {
-            bwSerie.write("time:\t"+entry.getKey()+"\tvalue:\t"+entry.getValue()+"\n");
+            bwLog.write("time:\t"+entry.getKey()+"\tvalue:\t"+entry.getValue()+"\n");
 
         }
-       // bwSerie.write("-End Window List");
 
 
     }
@@ -66,7 +130,8 @@ public class WriteFile implements WriteResult
     {
         try
         {
-            bwSerie=new BufferedWriter(new FileWriter(file.getAbsoluteFile()));
+            bwLog=new BufferedWriter(new FileWriter(fileLog.getAbsoluteFile()));
+            bwResult=new BufferedWriter(new FileWriter(fileResult));
         }
         catch (IOException e)
         {
@@ -78,7 +143,8 @@ public class WriteFile implements WriteResult
     {
         try
         {
-            bwSerie.close();
+            bwLog.close();
+            bwResult.close();
         }
         catch (IOException e)
         {
@@ -89,13 +155,13 @@ public class WriteFile implements WriteResult
     public void loadFromFile(File existingFile,String name,TimeSeriesValueWindow seriesToUpdate)
     {
 
-        this.file=existingFile;
+        this.fileLog=existingFile;
         String line="";
         boolean startList=false;
         BufferedReader readFile = null;
         try
         {
-            readFile = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+            readFile = new BufferedReader(new FileReader(fileLog.getAbsoluteFile()));
         }
         catch(IOException e)
         {
@@ -149,9 +215,7 @@ public class WriteFile implements WriteResult
                         case "window count element:":
                             seriesToUpdate.setWindowCountElement(Double.parseDouble((parts[1])));
                             break;
-                        case "path sub dir:":
-                            seriesToUpdate.setPathSubDir(Integer.parseInt(parts[1]));
-                            break;
+
                     }
 
                 }
@@ -164,7 +228,7 @@ public class WriteFile implements WriteResult
             e.printStackTrace();
         }
         this.serie=seriesToUpdate;
-        file=new File(Main.path +File.separator +Main.firstDirTimeSeriesPath(serie.getName())+ File.separator + Main.hashTimeSeriesName(serie.getName()) +File.separator +serie.getName()+ File.separator + Main.hashTimeSeriesName(serie.getName()) + "Log.txt");
+        fileLog=new File(Main.path +File.separator +firstDir+ File.separator + hash +File.separator +collisionNumber+ File.separator + hash + "Log.txt");
     }
 
 

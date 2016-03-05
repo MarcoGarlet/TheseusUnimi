@@ -18,17 +18,13 @@ public class TimeSeriesValueWindow {
     private double currTrend;
     private int windowNumber = 0;
     private double windowCountElement = 0;
-    private BufferedWriter writeSerie;
-    private int priority = 0;
-    private int pathSubDir;
-    private int hashValue;
-    private TreeMap<Double, Double> windowList = new TreeMap<Double, Double>();
 
-    public TimeSeriesValueWindow(String name) {
-        String split[]=Main.hashTimeSeriesName(name).split("\t");
+    private int priority = 0;
+    private TreeMap<Double, Double> windowList = new TreeMap<Double, Double>();
+    public TimeSeriesValueWindow(String name)
+    {
+
         this.name = name;
-        this.hashValue=Integer.parseInt(split[0]);
-        this.pathSubDir=Integer.parseInt(split[1]);
     }
 
     public String getName() {
@@ -108,37 +104,23 @@ public class TimeSeriesValueWindow {
         this.windowList.clear();
     }
 
-    public void computeTrend(double time, double relevance) throws IOException {
-        File file = new File(Main.path +File.separator +Main.firstDirTimeSeriesPath(this.name)+File.separator +Main.hashTimeSeriesName(this.name)+File.separator+ this.name + File.separator + "Result.txt");
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        }
-        writeSerie = new BufferedWriter(new FileWriter(file, true));
+    public void computeTrend(double time, double relevance) throws IOException
+    {
+
         this.windowNumber++;
-        String graphics = "------------";
         double sumDecayWindow = 0.0;
         double sumWeightWindow = 0.0;
-        writeSerie.append(graphics + "Computo Trend Della TimeSeries " + this.name + " Finestra numero " + this.windowNumber + graphics);
-        writeSerie.newLine();
-        for (Map.Entry<Double, Double> entry : windowList.entrySet()) {
+        for (Map.Entry<Double, Double> entry : windowList.entrySet())
+        {
             sumDecayWindow = sumDecayWindow + entry.getValue() * Math.pow(Math.E, -(lambda * (time - entry.getKey())));
             sumWeightWindow = sumWeightWindow + Math.pow(Math.E, -(lambda * (time - entry.getKey())));
-            writeSerie.append("Time : " + entry.getKey() + " Relevance " + entry.getValue());
-            writeSerie.newLine();
         }
-        writeSerie.append("Time : " + time + " Relevance " + relevance);
+
         sumDecayWindow = sumDecayWindow + relevance;
         sumWeightWindow = sumWeightWindow + 1;
         this.sumOfDecay = this.sumOfDecay + sumDecayWindow;
         this.sumOfWeight = this.sumOfWeight + sumWeightWindow;
         this.currTrend = relevance - (this.sumOfDecay / this.sumOfWeight);
-        writeSerie.newLine();
-        writeSerie.append("Media pesata " + (this.sumOfDecay / this.sumOfWeight) + " sum of decay " + this.sumOfDecay + " sum of weight : " + this.sumOfWeight);
-        writeSerie.newLine();
-        writeSerie.append(graphics + " Fine Finestra TimeSeries " + this.name + graphics);
-        writeSerie.newLine();
-        writeSerie.close();
 
 
     }
@@ -159,19 +141,5 @@ public class TimeSeriesValueWindow {
         this.priority = priority;
     }
 
-    public int getPathSubDir() {
-        return pathSubDir;
-    }
 
-    public void setPathSubDir(int pathSubDir) {
-        this.pathSubDir = pathSubDir;
-    }
-
-    public int getHashValue() {
-        return hashValue;
-    }
-
-    public void setHashValue(int hashValue) {
-        this.hashValue = hashValue;
-    }
 }

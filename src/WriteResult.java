@@ -6,7 +6,8 @@ import java.io.IOException;
 public interface WriteResult
 {
 
-    public void write() throws IOException;
+    public void writeLog() throws IOException;
+    public void writeWindowResult() throws IOException;
     public void connect();
     public void disconnect();
 

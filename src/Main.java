@@ -14,9 +14,9 @@ public class Main {
 
     private static TreeMap<String, TimeSeriesValueWindow> executionValueOrientedTree = new TreeMap<String, TimeSeriesValueWindow>();
     private static TreeMap<String, WriteResult> writeContextTree = new TreeMap<String, WriteResult>();
-    private static TreeMap<Integer,Integer> hashKey=new TreeMap<>();
+
     private static int windowLimit = 3;
-    public static String path = "/Volumes/SAMSUNG 1/RisultatiTheseus";
+    public static String path = File.separator+"Volumes"+File.separator+"SAMSUNG 1"+File.separator+"RisultatiTheseus";
     private static int executionLimit = 10000;
 
 
@@ -28,6 +28,7 @@ public class Main {
         {
             // computa le somme di decadimento , le somme peso e calcola il trend.
             series.computeTrend(time, value);
+            writeContextTree.get(series.getName()).writeWindowResult();
             if (series.getCurrTrend() > 0)
                 System.out.println("Trend " + series.getName() + " in crescita");
             else if (series.getCurrTrend() == 0)
@@ -48,21 +49,14 @@ public class Main {
         series.setCurrRelevance(value);
 
     }
-    public static String hashTimeSeriesName(String name)
+    public static int hashTimeSeriesName(String name)
     {
         int hash = 7;
         for (int i = 0; i < name.length(); i++) {
             hash = hash*31 + name.charAt(i);
         }
-        if(!hashKey.containsKey(hash))
-        {
-            hashKey.put(hash,1);
-        }
-        else
-        {
-            hashKey.replace(hash,hashKey.get(hash)+1);
-        }
-        return ""+hash+"\t"+hashKey.get(hash);
+
+        return hash;
     }
     public static String firstDirTimeSeriesPath(String name)
     {
@@ -80,14 +74,8 @@ public class Main {
         return firstFolder;
     }
 
-    public static boolean hasContextFile(String name) {
-
-        File context = new File(path + File.separator +firstDirTimeSeriesPath(name)+File.separator+hashTimeSeriesName(name) +File.separator +name + File.separator + hashTimeSeriesName(name) + "Log.txt");
-        return context.exists();
-    }
-
     public static void main(String args[]) throws IOException {
-        int chunkLimit = 0,diskAccess=0;
+        int chunkLimit = 0;
         double currTime, currValue;
         String currName;
         ReadFileStream readSource = new ReadFileStream("\t");
@@ -107,15 +95,7 @@ public class Main {
                 if (!executionValueOrientedTree.containsKey(readSource.getCurrTimeSeriesName()))
                 {
                     newElement = new TimeSeriesValueWindow(currName);
-
-                    if (hasContextFile(currName))
-                    {
-                        writeContextElement = new WriteFile();
-                        writeContextElement.loadFromFile(new File(path + File.separator +firstDirTimeSeriesPath(currName)+ File.separator + hashTimeSeriesName(currName) +File.separator +currName + File.separator + hashTimeSeriesName(currName) + "Log.txt"), currName, newElement);
-                    } else
-                    {
-                        writeContextElement = new WriteFile(newElement);
-                    }
+                    writeContextElement = new WriteFile(newElement);
                     writeContextTree.put(currName, writeContextElement);
                     executionValueOrientedTree.put(currName, newElement);
 
@@ -128,7 +108,7 @@ public class Main {
                     for (Map.Entry<String, WriteResult> entry : writeContextTree.entrySet())
                     {
                         entry.getValue().connect();
-                        entry.getValue().write();
+                        entry.getValue().writeLog();
                         entry.getValue().disconnect();
 
                     }
@@ -148,9 +128,10 @@ public class Main {
 
 
         }
-        for (Map.Entry<String, WriteResult> entry : writeContextTree.entrySet()) {
+        for (Map.Entry<String, WriteResult> entry : writeContextTree.entrySet())
+        {
             entry.getValue().connect();
-            entry.getValue().write();
+            entry.getValue().writeLog();
             entry.getValue().disconnect();
 
         }
