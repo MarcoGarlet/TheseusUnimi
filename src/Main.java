@@ -28,7 +28,7 @@ public class Main {
         {
             // computa le somme di decadimento , le somme peso e calcola il trend.
             series.computeTrend(time, value);
-            writeContextTree.get(series.getName()).writeWindowResult();
+            writeContextTree.get(series.getName()).writeWindowResult(series,time,value);
             if (series.getCurrTrend() > 0)
                 System.out.println("Trend " + series.getName() + " in crescita");
             else if (series.getCurrTrend() == 0)

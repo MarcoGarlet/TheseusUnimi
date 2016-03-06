@@ -23,7 +23,7 @@ public class WriteFile implements WriteResult
         collisionNumber=0;  // collision number, i'll set only if i discover list file
         this.serie=serie;
         firstDir= Main.firstDirTimeSeriesPath(serie.getName());
-        boolean foundCollision=false;
+        boolean existingTimeSeries=false;
         /*
         * Now i'm going to check in hash dir the list of collision to detect weather collision occurs
         * */
@@ -46,7 +46,7 @@ public class WriteFile implements WriteResult
                 collisionNumber=Integer.parseInt(token[1]);
                 if(token[0].equals(serie.getName()))
                 {
-                    foundCollision=true;
+                    existingTimeSeries=true;
                     break;
                 }
 
@@ -58,7 +58,16 @@ public class WriteFile implements WriteResult
             listFile.getParentFile().mkdirs();
             listFile.createNewFile();
         }
-        if(foundCollision==false)
+
+
+
+        /* if the time series in CollisionList file has no the same name a collision occurs,
+           so i increase the number of list and assign that number to new time series.
+           On the other hands i manage the case that a new time series is inserted in the same way
+
+
+            */
+        if(existingTimeSeries==false)
         {
             collisionNumber++;
             listWriter = new BufferedWriter(new FileWriter(listFile, true));

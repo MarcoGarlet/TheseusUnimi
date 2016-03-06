@@ -6,10 +6,10 @@ import java.io.IOException;
 public interface WriteResult
 {
 
-    public void writeLog() throws IOException;
-    public void writeWindowResult() throws IOException;
-    public void connect();
-    public void disconnect();
+     void writeLog() throws IOException;
+     void writeWindowResult(TimeSeriesValueWindow timeSeries, double lastTimeWindow, double lastValueWindow) throws IOException;
+     void connect();
+     void disconnect();
 
 
 }
