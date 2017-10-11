@@ -136,7 +136,7 @@ public class Main {
 
         }
         executionValueOrientedTree.clear();
-        writeContextTree.clear();
+        writeContextTree.clear(); // end
 
 
     }
