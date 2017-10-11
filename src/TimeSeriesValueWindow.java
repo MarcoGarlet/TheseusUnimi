@@ -98,8 +98,8 @@ public class TimeSeriesValueWindow {
     }
 
     /**
-     * Computa il trend e passa come parametro l'osservazione che completa la finestra
-     */
+	Compute trend with last TS Window element 
+	*/
     public void clearListElement() {
         this.windowList.clear();
     }

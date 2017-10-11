@@ -24,9 +24,9 @@ public class Main {
     {
 
         series.setWindowCountElement(series.getWindowCountElement() + 1);
-        if (series.getWindowCountElement() == windowLimit) // se l'elemento che sarebbe nella finestra ma non è ancora inserito in lista è l'ultimo computa il trend
+        if (series.getWindowCountElement() == windowLimit) 
         {
-            // computa le somme di decadimento , le somme peso e calcola il trend.
+            // compute trend.
             series.computeTrend(time, value);
             writeContextTree.get(series.getName()).writeWindowResult(series,time,value);
             if (series.getCurrTrend() > 0)
@@ -40,7 +40,6 @@ public class Main {
         }
         else
         {
-            // aggiungi i valori della finestra in attesa di essere visualizzati.
             series.addListElement(time, value);
             System.out.println("<>Time series: " + series.getName() + " AGGIUNGO SENZA COMPUTARE time :" + time + " relevance " + value + "<>" + series.getWindowCountElement());
 

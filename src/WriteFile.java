@@ -16,7 +16,7 @@ public class WriteFile implements WriteResult
     private int collisionNumber;
     private int hash;
     private String firstDir;
-    public WriteFile(TimeSeriesValueWindow serie) throws IOException  // crea la cartella con il file contenente tutti i valori delle variabili locali
+    public WriteFile(TimeSeriesValueWindow serie) throws IOException  // create a snapshot of computation state in file system
     {
 
         hash=Main.hashTimeSeriesName(serie.getName());
@@ -116,7 +116,6 @@ public class WriteFile implements WriteResult
 
     }
     public void writeLog() throws IOException {
-        // scrivi tutti i campi
         System.out.println("Time series nel metodo write "+serie.getName());
         bwLog.write("name:\t"+serie.getName()+"\n");
         bwLog.write("sum of decay:\t"+serie.getSumOfDecay()+"\n");
@@ -183,7 +182,7 @@ public class WriteFile implements WriteResult
             {
                 if(line.equals("-Window List-"))
                 {
-                    System.out.println("\ncapisco che inizia una lista\n");
+                    System.out.println("\nstart list\n");
                     startList=true;
                     continue;
                 }
